@@ -8,8 +8,6 @@ important packages:
 - rodio for audio
 - progress bar
 
-`sh
-
+```
 $ cargo run -- -c 1
-
-`
+```
