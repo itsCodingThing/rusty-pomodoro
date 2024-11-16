@@ -1,7 +1,7 @@
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::thread;
 use std::time::Duration;
-use tokio::time;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -15,8 +15,7 @@ struct Args {
     name: String,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let welcome_banner = include_str!("../ascii.txt");
     println!("{}", welcome_banner);
 
@@ -34,10 +33,11 @@ async fn main() {
         .progress_chars("#>-");
     bar.set_style(default_style);
 
-    let mut timer = time::interval(Duration::from_secs(1));
     let mut seconds = Duration::from_secs(total_seconds);
+
+    let wait = Duration::from_secs(1);
     loop {
-        timer.tick().await;
+        thread::sleep(wait);
         if seconds.is_zero() {
             break;
         }
