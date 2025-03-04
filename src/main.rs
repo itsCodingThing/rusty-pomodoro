@@ -22,11 +22,11 @@ fn main() {
     let args = Args::parse();
     let min = args.create;
     println!("Name: {}", args.name);
-    println!("Mins: {}", min);
+    println!("Duration: {} mins", min);
 
     let total_seconds = min * 60;
-    let fifty_pers_seconds = total_seconds / 2;
 
+    // prepare progress bar
     let bar = ProgressBar::new(total_seconds);
     let default_style = ProgressStyle::with_template("[{elapsed_precise}] {bar:40.cyan/green}")
         .unwrap()
@@ -34,15 +34,15 @@ fn main() {
     bar.set_style(default_style);
 
     let mut seconds = Duration::from_secs(total_seconds);
-
     let wait = Duration::from_secs(1);
+
     loop {
         thread::sleep(wait);
         if seconds.is_zero() {
             break;
         }
 
-        if seconds == Duration::from_secs(fifty_pers_seconds) {
+        if seconds == Duration::from_secs(total_seconds / 2) {
             println!("50% of time is completed.");
         }
 
