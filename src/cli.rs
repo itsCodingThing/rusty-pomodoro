@@ -3,16 +3,15 @@ use std::thread;
 use std::time::Duration;
 
 use crate::{
-    cmd::{Cmd, Commands},
+    cmd::{self, Commands},
     storage,
 };
-use clap::Parser;
 
 pub fn init() {
-    let cmd = Cmd::parse();
+    let cmd = cmd::create();
     let mut store = storage::create().expect("unable to create storage");
 
-    match cmd.command {
+    match cmd.commands() {
         Commands::Create { duration, name } => {
             let secs = duration * 60;
 

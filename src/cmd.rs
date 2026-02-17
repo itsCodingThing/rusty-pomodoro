@@ -4,10 +4,10 @@ use clap::{Parser, Subcommand};
 #[command(name = "Pomo", version = "1.0.0", about = "a pomodoro counter", long_about = None)]
 pub struct Cmd {
     #[command(subcommand)]
-    pub command: Commands,
+    command: Commands,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
     #[command(arg_required_else_help = true)]
     #[command(name = "add", about = "add a timer to storage")]
@@ -54,3 +54,14 @@ pub enum Commands {
     #[command(name = "list", about = "list all the availalbe timers")]
     List,
 }
+
+pub fn create() -> Cmd {
+    Cmd::parse()
+}
+
+impl Cmd {
+   pub fn commands(&self) -> Commands {
+        self.command.clone()
+    }
+}
+
