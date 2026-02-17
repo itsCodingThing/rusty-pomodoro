@@ -30,8 +30,8 @@ pub fn create() -> Result<Storage> {
         .open(temp_file_path)
         .expect("unable to create file");
 
-    let storage: Storage = serde_json::from_reader(file).unwrap_or_else(|_| {
-        println!("there was an error when parsing");
+    let storage: Storage = serde_json::from_reader(file).unwrap_or_else(|err| {
+        eprintln!("{err}");
 
         Storage {
             app_name: "rusty-pomodoro".to_string(),
@@ -54,6 +54,11 @@ impl Storage {
         self.timers.as_ref()
     }
 
+    pub fn remove(&mut self, i: usize) {
+        self.timers.remove(i);
+        self.save().expect("unable to save file");
+    }
+
     fn save(&self) -> Result<()> {
         let result = serde_json::to_string(self).expect("unable to save file");
         let mut temp_file_path = env::temp_dir();
@@ -62,7 +67,7 @@ impl Storage {
         let mut file = File::options()
             .write(true)
             .create(true)
-            .truncate(false)
+            .truncate(true)
             .open(temp_file_path)
             .expect("unable to read file");
 

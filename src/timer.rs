@@ -17,7 +17,11 @@ pub fn new(name: String, duration: u64) -> Timer {
 }
 
 impl Timer {
-    pub fn name(&self) -> &str {
-        self.name.as_ref()
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn duration(&self) -> u64 {
+        self.duration
     }
 }
