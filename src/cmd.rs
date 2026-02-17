@@ -60,8 +60,7 @@ pub fn create() -> Cmd {
 }
 
 impl Cmd {
-   pub fn commands(&self) -> Commands {
+    pub fn commands(&self) -> Commands {
         self.command.clone()
     }
 }
-

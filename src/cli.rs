@@ -54,17 +54,7 @@ pub fn init() {
         Commands::Remove { name } => {
             if let Some(n) = name {
                 println!("search by name: {n:?}");
-                let mut remove_idx = 0;
-
-                for (i, timer) in store.timers().iter().enumerate() {
-                    if timer.name() == n.as_str() {
-                        remove_idx = i;
-                    }
-                }
-
-                if remove_idx > 0 {
-                    store.remove(remove_idx);
-                }
+                store.remove_by_name(n);
             }
         }
 

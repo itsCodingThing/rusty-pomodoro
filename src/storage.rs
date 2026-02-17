@@ -54,9 +54,21 @@ impl Storage {
         self.timers.as_ref()
     }
 
-    pub fn remove(&mut self, i: usize) {
-        self.timers.remove(i);
-        self.save().expect("unable to save file");
+    pub fn remove_by_name(&mut self, name: String) {
+        if !self.timers.is_empty() {
+            let mut remove_idx = 0;
+
+            for (i, timer) in self.timers.iter().enumerate() {
+                if timer.name() == name.as_str() {
+                    remove_idx = i;
+                }
+            }
+
+            if remove_idx < self.timers.len(){
+                self.timers.remove(remove_idx);
+                self.save().expect("unable to save file");
+            }
+        }
     }
 
     fn save(&self) -> Result<()> {
