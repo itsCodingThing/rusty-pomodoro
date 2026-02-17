@@ -51,6 +51,9 @@ pub enum Commands {
         name: Option<String>,
     },
 
+    #[command(name = "nuke", about = "remove all stored timers")]
+    Nuke,
+
     #[command(name = "list", about = "list all the availalbe timers")]
     List,
 }

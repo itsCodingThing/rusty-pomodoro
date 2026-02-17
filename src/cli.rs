@@ -67,6 +67,11 @@ pub fn init() {
                 println!("{value:?}");
             }
         }
+
+        Commands::Nuke => {
+            store.remove_all();
+            println!("removed all the timers");
+        }
     }
 }
 

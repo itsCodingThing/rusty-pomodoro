@@ -71,6 +71,11 @@ impl Storage {
         }
     }
 
+    pub fn remove_all(&mut self) {
+        self.timers = Vec::new();
+        self.save().expect("unable to save file");
+    }
+
     fn save(&self) -> Result<()> {
         let result = serde_json::to_string(self).expect("unable to save file");
         let mut temp_file_path = env::temp_dir();
