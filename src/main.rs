@@ -1,5 +1,6 @@
 mod cli;
 mod cmd;
+mod pomo;
 mod storage;
 mod timer;
 

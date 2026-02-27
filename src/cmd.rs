@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(name = "Pomo", version = "1.0.0", about = "a pomodoro counter", long_about = None)]
+#[command(name = "hcmd", version = "2.0.0", about = "enhanced cmds", long_about = None)]
 pub struct Cmd {
     #[command(subcommand)]
     command: Commands,
@@ -9,6 +9,15 @@ pub struct Cmd {
 
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
+    Pomo {
+        #[command(subcommand)]
+        command: PomoCommands,
+    },
+    Fd,
+}
+
+#[derive(Debug, Subcommand, Clone)]
+pub enum PomoCommands {
     #[command(arg_required_else_help = true)]
     #[command(name = "add", about = "add a timer to storage")]
     Add {
