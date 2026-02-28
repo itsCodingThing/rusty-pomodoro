@@ -1,16 +1,18 @@
 use crate::{
     cmd::{self, Commands},
-    pomo,
+    fd, pomo,
 };
 
 pub fn init() {
     let cmd = cmd::create();
 
     match cmd.commands() {
-        Commands::Pomo { command } => pomo::pomo(command),
+        Commands::Pomo { command } => pomo::init(command),
 
         Commands::Fd => {
-            todo!("implement")
+            if fd::init().is_err() {
+                println!("ratatui error");
+            }
         }
     }
 }
