@@ -11,20 +11,17 @@ use ratatui::{
 use std::{fs, str::FromStr};
 
 #[derive(Debug)]
-enum FdPathType {
-    Dir,
-    File,
-}
-
-#[derive(Debug)]
 pub struct FdPath {
     path: String,
-    kind: FdPathType,
     name: String,
     spacer: String,
+    is_dir: bool,
+    is_expended: bool,
+    total_paths: usize,
 }
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
+const NESTED_SPACER: &str = "|_";
 
 pub fn init() -> Result<()> {
     let paths = retreive_paths(String::from("./"));
@@ -46,16 +43,20 @@ fn retreive_paths(path: String) -> Vec<FdPath> {
         if metadata.is_dir() {
             paths.push(FdPath {
                 path: p,
-                kind: FdPathType::Dir,
                 name: entry.file_name().into_string().unwrap(),
                 spacer,
+                is_expended: false,
+                is_dir: true,
+                total_paths: 0,
             });
         } else if metadata.is_file() {
             paths.push(FdPath {
                 path: p,
-                kind: FdPathType::File,
                 name: entry.file_name().into_string().unwrap(),
                 spacer,
+                is_expended: false,
+                is_dir: false,
+                total_paths: 0,
             });
         }
     }
@@ -116,10 +117,13 @@ impl Fd {
 
                 ListItem::from(
                     Text::from(Line::from(vec![
+                        // spacer to show
                         Span::from(spacer),
+                        // icon with color
                         Span::from(icon.to_string())
                             .style(Style::new().fg(Color::from_str(icon.color).unwrap())),
                         Span::from(" "),
+                        // filename
                         Span::from(p.name.to_owned()),
                     ]))
                     .bold(),
@@ -155,26 +159,15 @@ impl Fd {
             KeyCode::Char('q') => self.exit(),
 
             KeyCode::Char('j') => {
-                self.increment();
+                self.down();
             }
 
             KeyCode::Char('k') => {
-                self.decrement();
+                self.up();
             }
 
             KeyCode::Enter => {
-                if let Some(idx) = self.list_state.selected() {
-                    if let Some(item) = self.list.get(idx) {
-                        let insert_idx = idx + 1;
-                        let mut paths = retreive_paths(item.path.to_owned());
-
-                        paths.iter_mut().for_each(|p| {
-                            p.spacer = item.spacer.to_owned() + "  ";
-                        });
-
-                        self.list.splice(insert_idx..insert_idx, paths);
-                    }
-                }
+                self.toggle_expend();
             }
 
             _ => {}
@@ -185,11 +178,42 @@ impl Fd {
         self.exit = true;
     }
 
-    fn increment(&mut self) {
+    fn down(&mut self) {
         self.list_state.select_next();
     }
 
-    fn decrement(&mut self) {
+    fn up(&mut self) {
         self.list_state.select_previous();
+    }
+
+    fn toggle_expend(&mut self) {
+        if let Some(idx) = self.list_state.selected() {
+            if let Some(item) = self.list.get_mut(idx) {
+                if item.is_dir {
+                    if item.is_expended {
+                        item.is_expended = false;
+
+                        let remove_idx_from = idx + 1;
+                        let remove_idx_to = item.total_paths + remove_idx_from;
+
+                        item.total_paths = 0;
+                        self.list.drain(remove_idx_from..remove_idx_to);
+                    } else {
+                        item.is_expended = true;
+
+                        let insert_idx = idx + 1;
+                        let mut paths = retreive_paths(item.path.to_owned());
+
+                        item.total_paths += paths.len();
+
+                        paths.iter_mut().for_each(|p| {
+                            p.spacer = item.spacer.to_owned() + NESTED_SPACER;
+                        });
+
+                        self.list.splice(insert_idx..insert_idx, paths);
+                    }
+                }
+            }
+        }
     }
 }
