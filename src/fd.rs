@@ -2,10 +2,13 @@ use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use devicons::FileIcon;
 use ratatui::{
+    layout::{Constraint, Layout, Position},
     style::{palette::tailwind::SLATE, Color, Modifier, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, HighlightSpacing, List, ListItem, ListState},
+    widgets::{
+        Block, Borders, HighlightSpacing, List, ListItem, ListState, Padding, Paragraph, Widget,
+    },
     DefaultTerminal, Frame,
 };
 use std::{fs, str::FromStr};
@@ -69,6 +72,7 @@ pub struct Fd {
     exit: bool,
     list_state: ListState,
     list: Vec<FdPath>,
+    is_renaming: bool,
 }
 
 impl Fd {
@@ -77,6 +81,7 @@ impl Fd {
             exit: false,
             list_state: ListState::default(),
             list: paths,
+            is_renaming: false,
         }
     }
 
@@ -93,20 +98,17 @@ impl Fd {
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        let title = Line::from(" File Explorer ".bold());
-        let instructions = Line::from(vec![
-            " Down ".into(),
-            "<j>".blue().bold(),
-            " Up ".into(),
-            "<k>".blue().bold(),
-            " Quit ".into(),
-            "<q> ".blue().bold(),
-        ]);
+        let bottom_height = if self.is_renaming { 3 } else { 1 };
 
-        let block = Block::bordered()
-            .title(title.centered())
-            .title_bottom(instructions.centered())
-            .border_set(border::THICK);
+        let vertical = Layout::vertical([
+            Constraint::Length(1),
+            Constraint::Min(0),
+            Constraint::Length(bottom_height),
+        ]);
+        let horizontal = Layout::horizontal([Constraint::Fill(1); 2]);
+
+        let [title_area, main_area, bottom_area] = vertical.areas(frame.area());
+        let [list_area, preview_area] = horizontal.areas(main_area);
 
         let items: Vec<ListItem> = self
             .list
@@ -132,12 +134,56 @@ impl Fd {
             .collect();
 
         let list = List::new(items)
-            .block(block)
-            .highlight_symbol(">> ")
+            .block(
+                Block::bordered()
+                    .title(Line::from(" All File/Dir ".bold()).centered())
+                    .border_set(border::THICK),
+            )
+            .highlight_symbol(">> ".bold())
             .highlight_spacing(HighlightSpacing::Always)
             .highlight_style(SELECTED_STYLE);
 
-        frame.render_stateful_widget(list, frame.area(), &mut self.list_state);
+        // title area
+        frame.render_widget(Line::from(" File Explorer ".bold()).centered(), title_area);
+
+        // list area
+        frame.render_stateful_widget(list, list_area, &mut self.list_state);
+
+        // preview area
+        frame.render_widget(
+            Block::bordered()
+                .title(Line::from(" Preview ".bold()).centered())
+                .border_set(border::THICK),
+            preview_area,
+        );
+
+        // bottom area
+        if self.is_renaming {
+            // set cursor position inside box
+            frame.set_cursor_position(Position::new(bottom_area.x + 1, bottom_area.y + 1));
+
+            frame.render_widget(
+                Paragraph::new("rename this file").block(
+                    Block::bordered()
+                        .title(Line::from(" Rename ".bold()).centered())
+                        .title_bottom(Line::from(" submit <enter> "))
+                        .border_set(border::THICK),
+                ),
+                bottom_area,
+            );
+        } else {
+            frame.render_widget(
+                Line::from(vec![
+                    " Down ".into(),
+                    "<j>".blue().bold(),
+                    " Up ".into(),
+                    "<k>".blue().bold(),
+                    " Quit ".into(),
+                    "<q> ".blue().bold(),
+                ]),
+                bottom_area,
+            );
+        }
     }
 
     fn handle_events(&mut self) -> Result<()> {
@@ -168,6 +214,10 @@ impl Fd {
 
             KeyCode::Enter => {
                 self.toggle_expend();
+            }
+
+            KeyCode::Char('r') => {
+                self.is_renaming = !self.is_renaming;
             }
 
             _ => {}
